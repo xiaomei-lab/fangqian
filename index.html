@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fangqian｜体检报告自动翻译工作流</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #e6f7ef;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10c-4 6-10 8-16 7 4 5 10 10 16 18 6-8 12-13 16-18-6 1-12-1-16-7z' fill='%23b8e9d0' fill-opacity='0.4'/%3E%3C/svg%3E");
+            color: #235c4b;
+            padding: 30px 16px;
+        }
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        h1 {
+            font-size: 34px;
+            color: #287d63;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size:17px;
+            color:#3b8c74;
+        }
+        .card {
+            background: #ffffffdd;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 14px #b0ddca88;
+            border: 1px solid #c8eedb;
+            margin-bottom:24px;
+        }
+        .upload-area {
+            border:2px dashed #68c9a7;
+            border-radius:16px;
+            padding:40px 20px;
+            text-align:center;
+            cursor:pointer;
+            transition: 0.3s;
+        }
+        .upload-area:hover {
+            background-color:#f0fcf8;
+        }
+        .upload-area input{
+            display:none;
+        }
+        .upload-btn{
+            background:#42b997;
+            color:white;
+            border:none;
+            padding:12px 26px;
+            border-radius:30px;
+            font-size:16px;
+            cursor:pointer;
+        }
+        .flow-step{
+            display:grid;
+            grid-template-columns: repeat(3,1fr);
+            gap:16px;
+            margin:24px 0;
+        }
+        .step-item{
+            background:#f1fbf7;
+            border-radius:16px;
+            padding:18px;
+            text-align:center;
+        }
+        .step-num{
+            width:34px;height:34px;
+            border-radius:50%;
+            background:#42b997;
+            color:white;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            margin-bottom:10px;
+        }
+        .result-box{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:20px;
+        }
+        textarea{
+            width:100%;
+            min-height:240px;
+            border:1px solid #b8e9d0;
+            border-radius:12px;
+            padding:14px;
+            background:#f8fffcee;
+            color:#235c4b;
+        }
+        footer{
+            margin-top:40px;
+            text-align:center;
+            padding:20px;
+            font-size:18px;
+            font-weight:bold;
+            color:#287d63;
+        }
+        .mint-icon{
+            font-size:22px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 体检报告自动翻译工作流</h1>
+            <p class="subtitle">薄荷清爽版 · 上传图片自动识别、翻译医学指标</p>
+        </header>
+
+        <div class="card">
+            <div class="upload-area" id="uploadBox">
+                <input type="file" id="imgFile" accept="image/*">
+                <p class="mint-icon">🍃</p>
+                <p style="margin:12px 0; font-size:17px;">点击上传体检报告图片</p>
+                <button class="upload-btn">选择图片</button>
+            </div>
+        </div>
+
+        <div class="flow-step">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <h3>OCR识别</h3>
+                <p>提取图片里全部体检文字</p>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <h3>术语解析</h3>
+                <p>读取指标、参考范围</p>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <h3>大白话翻译</h3>
+                <p>标注正常/偏高/偏低，输出解读</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 解析结果</h3>
+            <div class="result-box">
+                <div>
+                    <h4>原始OCR文本</h4>
+                    <textarea id="ocrRaw" placeholder="识别后的原文会显示在这里……"></textarea>
+                </div>
+                <div>
+                    <h4>💚 大白话解读</h4>
+                    <textarea id="resultText" placeholder="体检指标通俗解读结果……"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            🍃 Made by 赛博建材f姐 · 导师陈老板 🍃
+        </footer>
+    </div>
+
+<script>
+const uploadBox = document.getElementById('uploadBox');
+const fileInput = document.getElementById('imgFile');
+uploadBox.onclick = ()=>fileInput.click();
+fileInput.onchange = async(e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    document.getElementById("ocrRaw").value = "模拟OCR识别中……\n正在读取体检报告图片内容";
+    document.getElementById("resultText").value = "等待翻译结果……";
+    setTimeout(()=>{
+        document.getElementById("ocrRaw").value = "【血常规】\n红细胞(RBC):4.82×10¹²/L，参考4.0~5.5\n白细胞(WBC):6.1×10⁹/L，参考4~10\n血红蛋白(HGB):148g/L，参考120~160";
+        document.getElementById("resultText").value = "1.红细胞：4.82×10¹²/L，参考4.0-5.5，正常✅\n大白话：负责输送氧气的血细胞数量正常。\n2.白细胞：6.1×10⁹/L，参考4~10，正常✅\n大白话：免疫细胞数量正常。\n3.血红蛋白：148g/L，参考120~160，正常✅\n大白话：血液携氧能力正常。\n⚠️本内容仅术语翻译，不构成医学诊断，指标异常请务必咨询线下医生。";
+    },1800)
+}
+</script>
+</body>
+</html>
